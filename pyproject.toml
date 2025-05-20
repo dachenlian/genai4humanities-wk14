@@ -7,6 +7,7 @@ requires-python = ">=3.11"
 dependencies = [
     "datasets>=3.6.0",
     "hf-xet>=1.1.2",
+    "huggingface-hub[inference]>=0.31.2",
     "lancedb>=0.22.0",
     "loguru>=0.7.3",
     "openai>=1.79.0",

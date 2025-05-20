@@ -351,6 +351,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "datasets" },
     { name = "hf-xet" },
+    { name = "huggingface-hub", extra = ["inference"] },
     { name = "lancedb" },
     { name = "loguru" },
     { name = "openai" },
@@ -368,6 +369,7 @@ dependencies = [
 requires-dist = [
     { name = "datasets", specifier = ">=3.6.0" },
     { name = "hf-xet", specifier = ">=1.1.2" },
+    { name = "huggingface-hub", extras = ["inference"], specifier = ">=0.31.2" },
     { name = "lancedb", specifier = ">=0.22.0" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "openai", specifier = ">=1.79.0" },
@@ -449,6 +451,11 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/3b/7b/09ab792c463975fcd0a81f459b5e900057dabbbc274ff253bb28d58ebfce/huggingface_hub-0.31.2.tar.gz", hash = "sha256:7053561376ed7f6ffdaecf09cc54d70dc784ac6315fa4bb9b93e19662b029675", size = 403025 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/83/81/a8fd9c226f7e3bc8918f1e456131717cb38e93f18ccc109bf3c8471e464f/huggingface_hub-0.31.2-py3-none-any.whl", hash = "sha256:8138cd52aa2326b4429bb00a4a1ba8538346b7b8a808cdce30acb6f1f1bdaeec", size = 484230 },
+]
+
+[package.optional-dependencies]
+inference = [
+    { name = "aiohttp" },
 ]
 
 [[package]]
