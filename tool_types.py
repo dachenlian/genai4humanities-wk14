@@ -1,18 +1,17 @@
-from typing import Literal
+from typing import Any, Literal
 
 from typing_extensions import TypedDict
 
 
 class ToolCallResult(TypedDict):
     """
-    A dictionary representing the result of a tool call.
-
+    A TypedDict representing the result of a tool call.
     Attributes:
-        tool_name (str): The name of the tool that was called.
-        tool_input (str): The input provided to the tool.
-        tool_output (str): The output returned by the tool.
+        llm_consumable (str): A string representation of the result that can be consumed by a language model.
+        ui_displayable (Any): Any type of data that can be displayed in a user interface.
+        return_type (Literal["dataframe", "error_message"]): The type of the returned data, either a dataframe or an error message.
     """
 
     llm_consumable: str
-    ui_displayable: str
-    output_type: Literal["dataframe"]
+    ui_displayable: Any
+    return_type: Literal["dataframe", "error_message"]
