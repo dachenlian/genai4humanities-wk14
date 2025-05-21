@@ -42,21 +42,21 @@ class QueryMovieDB(BaseModel):
         description="Query overviews of movies",
     )
     limit: int = Field(
-        default=10,
+        default=5,
         description="Number of results to return",
     )
 
 
 def query_movie_db(
     text: str,
-    limit: int = 10,
+    limit: int = 5,
 ) -> ToolCallResult:
     """
     Query the LanceDB movie database for movies with similar overviews to the input text.
 
     Args:
         text (str): The input text to query the database.
-        limit (int, optional): The number of results to return. Defaults to 10.
+        limit (int, optional): The number of results to return. Defaults to 5.
 
     Returns:
         ToolCallResult: The result of the tool call.
@@ -67,6 +67,7 @@ def query_movie_db(
         tbl.search(q_emb).limit(limit).to_pandas()[COLUMNS_TO_KEEP]
     )
     df["cast"] = df["cast"].apply(lambda x: [c["name"] for c in x])
+    df = df.sort_values(by="release_year", ascending=False)
     return {
         "llm_consumable": df.to_json(lines=True, orient="records"),
         "ui_displayable": df,
