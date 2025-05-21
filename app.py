@@ -6,6 +6,7 @@ from time import time
 
 import gradio as gr
 import lancedb
+import pandas as pd
 from dotenv import load_dotenv
 from huggingface_hub import AsyncInferenceClient
 from huggingface_hub.inference._generated.types import ChatCompletionOutputToolCall
@@ -28,6 +29,7 @@ embedder = SentenceTransformer(
 )
 db = lancedb.connect("./data/lance_db")
 tbl = db.open_table("movies")
+COLUMNS_TO_KEEP = ["title", "overview", "release_year", "cast"]
 
 
 class QueryMovieDB(BaseModel):
@@ -56,8 +58,10 @@ def query_movie_db(
     """
     q_emb = embedder.encode(text)
     df = (
-        tbl.search(q_emb).limit(limit).to_pandas().drop(columns=["vector", "_distance"])
+        # tbl.search(q_emb).limit(limit).to_pandas().drop(columns=["vector", "_distance"])
+        tbl.search(q_emb).limit(limit).to_pandas()[COLUMNS_TO_KEEP]
     )
+    df["cast"] = df["cast"].apply(lambda x: [c["name"] for c in x])
     return {
         "llm_consumable": df.to_json(lines=True, orient="records"),
         "ui_displayable": df,
@@ -74,6 +78,8 @@ AVAILABLE_FUNCTIONS = {
 }
 
 tool_schemas = [create_tool_schema_for_function(fn, schema) for fn, schema in TOOLS]
+
+CURRENT_DF = pd.DataFrame(columns=COLUMNS_TO_KEEP)
 
 
 def call_function(name, args) -> ToolCallResult:
@@ -112,7 +118,8 @@ async def chat(
     api_key: str = API_KEY,
     provider: str = "hf-inference",
     model: str = "Qwen/Qwen3-235B-A22B",
-) -> AsyncGenerator[list[gr.ChatMessage] | gr.ChatMessage, None]:
+) -> AsyncGenerator[tuple[list[gr.ChatMessage] | gr.ChatMessage, pd.DataFrame], None]:
+    global CURRENT_DF
     start_time = time()
     if not api_key:
         raise gr.Error("Hugging Face API key is required")
@@ -148,6 +155,8 @@ async def chat(
         #     content=f"Tool call: {tc.function.name}({', '.join(tc.function.arguments.values())})",
         # ))
         tool_result = call_function(func_name, func_args)
+        if tool_result["return_type"] == "dataframe":
+            CURRENT_DF = tool_result["ui_displayable"]
         logger.info(f"Tool result: {tool_result['llm_consumable']}")
         meta_response = gr.ChatMessage(
             content="",
@@ -156,7 +165,7 @@ async def chat(
                 "status": "pending",
             },
         )
-        yield meta_response
+        yield meta_response, CURRENT_DF
         messages.append(
             {
                 "role": "tool",
@@ -174,7 +183,7 @@ async def chat(
         logger.info(f"Response after tool call: {response}")
         meta_response.metadata["status"] = "done"
         meta_response.metadata["duration"] = time() - start_time
-        yield meta_response
+        yield meta_response, CURRENT_DF
 
         responses.append(meta_response)
     responses.append(
@@ -183,34 +192,48 @@ async def chat(
             content=response.choices[0].message.content,
         )
     )
-    yield responses
+    yield responses, CURRENT_DF
 
 
-demo = gr.ChatInterface(
-    fn=chat,
-    type="messages",
-    title="Movie Search",
-    theme=gr.themes.Default(),  # https://www.gradio.app/guides/theming-guide
-    additional_inputs=[
-        gr.Textbox(
-            label="Hugging Face API Key",
-            placeholder="Enter your Hugging Face API key here",
-            type="password",
-            value=API_KEY,
-        ),
-        gr.Dropdown(
-            label="Provider",
-            choices=["hf-inference"],
-            value="hf-inference",
-        ),
-        gr.Dropdown(
-            label="Model",
-            choices=["Qwen/Qwen3-235B-A22B"],
-            value="Qwen/Qwen3-235B-A22B",
-        ),
-    ],
-)
+with gr.Blocks() as demo:
+    df_component = gr.Dataframe(
+        CURRENT_DF,
+        label="Movie Search Results",
+        render=False,
+        headers=["Title", "Overview", "Release Year", "Cast"],
+        datatype=["str", "str", "number", "str"],
+    )
+    with gr.Row():
+        with gr.Column(scale=1):
+            gr.ChatInterface(
+                fn=chat,
+                type="messages",
+                title="Movie Search",
+                theme=gr.themes.Default(),  # https://www.gradio.app/guides/theming-guide
+                additional_inputs=[
+                    gr.Textbox(
+                        label="Hugging Face API Key",
+                        placeholder="Enter your Hugging Face API key here",
+                        type="password",
+                        value=API_KEY,
+                    ),
+                    gr.Dropdown(
+                        label="Provider",
+                        choices=["hf-inference"],
+                        value="hf-inference",
+                    ),
+                    gr.Dropdown(
+                        label="Model",
+                        choices=["Qwen/Qwen3-235B-A22B"],
+                        value="Qwen/Qwen3-235B-A22B",
+                    ),
+                ],
+                additional_outputs=[df_component],
+            )
+    with gr.Row():
+        with gr.Column(scale=1):
+            df_component.render()
 
 
-if __name__ == "__main__":
-    demo.launch()
+# if __name__ == "__main__":
+demo.launch(pwa=True)
