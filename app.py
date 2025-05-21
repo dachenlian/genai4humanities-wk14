@@ -7,6 +7,7 @@ from time import time
 import gradio as gr
 import lancedb
 import pandas as pd
+from datasets import load_from_disk
 from dotenv import load_dotenv
 from huggingface_hub import AsyncInferenceClient
 from huggingface_hub.inference._generated.types import ChatCompletionOutputToolCall
@@ -27,8 +28,12 @@ embedder = SentenceTransformer(
     "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
     device="cpu",
 )
+ds = load_from_disk("./data/dataset_processed/")
+df = ds.to_pandas()
 db = lancedb.connect("./data/lance_db")
-tbl = db.open_table("movies")
+tbl = db.create_table("movies", data=df, mode="overwrite")
+tbl.create_fts_index("overview", replace=True)
+
 COLUMNS_TO_KEEP = ["title", "overview", "release_year", "cast"]
 
 
