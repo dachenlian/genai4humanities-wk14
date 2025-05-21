@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "datasets>=3.6.0",
+    "gradio>=5.30.0",
     "hf-transfer>=0.1.9",
     "hf-xet>=1.1.2",
     "huggingface-hub[inference]>=0.31.2",
