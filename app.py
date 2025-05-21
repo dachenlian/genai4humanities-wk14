@@ -242,4 +242,4 @@ with gr.Blocks() as demo:
 
 
 # if __name__ == "__main__":
-demo.launch(pwa=True)
+demo.launch(pwa=True, share=True)
