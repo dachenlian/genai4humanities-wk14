@@ -1,7 +1,31 @@
+from collections.abc import Callable
+from typing import Any
+
 from pydantic import BaseModel
+from typing_extensions import TypedDict
+
+FunctionSchema = TypedDict(
+    "FunctionSchema",
+    {
+        "name": str,
+        "description": str,
+        "parameters": dict[str, Any],
+    },
+)
 
 
-def create_tool_schema_for_function(func, params_model_class: type[BaseModel]) -> dict:
+ToolSchema = TypedDict(
+    "ToolSchema",
+    {
+        "type": str,
+        "function": FunctionSchema,
+    },
+)
+
+
+def create_tool_schema_for_function(
+    func: Callable, params_model_class: type[BaseModel]
+) -> ToolSchema:
     """
     Generates an OpenAI-compatible tool schema for a given function and its Pydantic parameter model.
     """
@@ -13,7 +37,7 @@ def create_tool_schema_for_function(func, params_model_class: type[BaseModel]) -
     # Pydantic V2's method to get JSON schema
     parameters_schema = params_model_class.model_json_schema()
 
-    tool_schema = {
+    tool_schema: ToolSchema = {
         "type": "function",
         "function": {
             "name": func.__name__,
