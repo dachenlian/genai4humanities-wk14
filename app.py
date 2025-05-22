@@ -137,6 +137,9 @@ async def chat(
     messages.append(
         {"role": "user", "content": f"{message} /no_think"}
     )  # /no_think disables thinking
+    
+    logger.info(f"Messages: {messages}")
+
     response = await client.chat_completion(  # type: ignore
         model=model,
         messages=messages,
@@ -165,7 +168,7 @@ async def chat(
         meta_response = gr.ChatMessage(
             content="",
             metadata={
-                "title": f"Tool call: {func_name}",
+                "title": f"Tool call: {func_name}({func_args})",
                 "status": "pending",
             },
         )
@@ -176,6 +179,7 @@ async def chat(
                 "content": tool_result["llm_consumable"],
             }
         )
+        logger.info(f"After tool call messages: {messages}")
         response = await client.chat_completion(  # type: ignore
             model=model,
             messages=messages,
