@@ -26,7 +26,7 @@ API_KEY = os.getenv("HF_TOKEN", "")
 
 embedder = SentenceTransformer(
     "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-    device="cpu",
+    device="cpu",  # we need to use CPU because Hugging Face Spaces only has CPU for free tier
 )
 ds = load_from_disk("./data/dataset_processed/")
 df = ds.to_pandas()
