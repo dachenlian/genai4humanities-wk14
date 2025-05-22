@@ -122,8 +122,8 @@ async def chat(
     message: str,
     history: list[Message],
     api_key: str = API_KEY,
-    provider: str = "hf-inference",
-    model: str = "Qwen/Qwen3-235B-A22B",
+    provider: str = "fireworks-ai",
+    model: str = "Qwen/Qwen3-30B-A3B",
 ) -> AsyncGenerator[tuple[list[gr.ChatMessage] | gr.ChatMessage, pd.DataFrame], None]:
     global CURRENT_DF
     start_time = time()
