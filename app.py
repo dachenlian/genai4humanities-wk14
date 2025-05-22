@@ -223,13 +223,13 @@ with gr.Blocks() as demo:
                     ),
                     gr.Dropdown(
                         label="Provider",
-                        choices=["hf-inference"],
-                        value="hf-inference",
+                        choices=["fireworks-ai"],
+                        value="fireworks-ai",
                     ),
                     gr.Dropdown(
                         label="Model",
-                        choices=["Qwen/Qwen3-235B-A22B"],
-                        value="Qwen/Qwen3-235B-A22B",
+                        choices=["Qwen/Qwen3-30B-A3B"],
+                        value="Qwen/Qwen3-30B-A3B",
                     ),
                 ],
                 additional_outputs=[df_component],
