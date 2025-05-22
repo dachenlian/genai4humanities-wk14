@@ -121,7 +121,7 @@ gr.Info(f"Loaded movie database with {tbl.count_rows()} rows")
 async def chat(
     message: str,
     history: list[Message],
-    api_key: str = API_KEY,
+    api_key: str = API_KEY,  # we ask the user to enter the API key because we don't want to pay for other users (usually)
     provider: str = "fireworks-ai",
     model: str = "Qwen/Qwen3-30B-A3B",
 ) -> AsyncGenerator[tuple[list[gr.ChatMessage] | gr.ChatMessage, pd.DataFrame], None]:
