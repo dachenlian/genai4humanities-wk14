@@ -134,11 +134,12 @@ async def chat(
 
     client = AsyncInferenceClient(provider=provider, api_key=api_key)
     messages = deepcopy(history)
+    messages = [m for m in messages if m["content"]]
     messages.append(
         {"role": "user", "content": f"{message} /no_think"}
     )  # /no_think disables thinking
     
-    logger.info(f"Messages: {messages}")
+    logger.info(f"Messages: {json.dumps(messages, indent=2)}")
 
     response = await client.chat_completion(  # type: ignore
         model=model,
@@ -179,7 +180,7 @@ async def chat(
                 "content": tool_result["llm_consumable"],
             }
         )
-        logger.info(f"After tool call messages: {messages}")
+        logger.info(f"After tool call messages: {json.dumps(messages, indent=2)}")
         response = await client.chat_completion(  # type: ignore
             model=model,
             messages=messages,
@@ -227,8 +228,8 @@ with gr.Blocks() as demo:
                     ),
                     gr.Dropdown(
                         label="Provider",
-                        choices=["fireworks-ai"],
-                        value="fireworks-ai",
+                        choices=["nebius"],
+                        value="nebius",
                     ),
                     gr.Dropdown(
                         label="Model",
