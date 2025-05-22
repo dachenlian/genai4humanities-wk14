@@ -156,14 +156,12 @@ async def chat(
         call_id = tc.id
         func_name = tc.function.name
         func_args = json.loads(tc.function.arguments)
-        # responses.append(gr.ChatMessage(
-        #     role="assistant",
-        #     content=f"Tool call: {tc.function.name}({', '.join(tc.function.arguments.values())})",
-        # ))
         tool_result = call_function(func_name, func_args)
+
         if tool_result["return_type"] == "dataframe":
             CURRENT_DF = tool_result["ui_displayable"]
         logger.info(f"Tool result: {tool_result['llm_consumable']}")
+
         meta_response = gr.ChatMessage(
             content="",
             metadata={
@@ -176,7 +174,6 @@ async def chat(
             {
                 "role": "tool",
                 "content": tool_result["llm_consumable"],
-                # "content": f"Tool call: {func_name}({', '.join(func_args.values())})",
             }
         )
         response = await client.chat_completion(  # type: ignore
@@ -192,6 +189,7 @@ async def chat(
         yield meta_response, CURRENT_DF
 
         responses.append(meta_response)
+
     responses.append(
         gr.ChatMessage(
             role="assistant",
