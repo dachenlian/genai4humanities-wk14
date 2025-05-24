@@ -3,6 +3,7 @@ import os
 from collections.abc import AsyncGenerator
 from copy import deepcopy
 from time import time
+from typing import TYPE_CHECKING
 
 import gradio as gr
 import lancedb
@@ -10,7 +11,6 @@ import pandas as pd
 from datasets import load_from_disk
 from dotenv import load_dotenv
 from huggingface_hub import AsyncInferenceClient
-from huggingface_hub.inference._generated.types import ChatCompletionOutputToolCall
 from loguru import logger
 from pydantic import BaseModel, Field
 from sentence_transformers import SentenceTransformer
@@ -18,6 +18,9 @@ from sentence_transformers import SentenceTransformer
 from chat_types import Message
 from tool_types import ToolCallResult
 from utils import create_tool_schema_for_function
+
+if TYPE_CHECKING:
+    from huggingface_hub.inference._generated.types import ChatCompletionOutputToolCall
 
 load_dotenv()
 
@@ -138,7 +141,7 @@ async def chat(
     messages.append(
         {"role": "user", "content": f"{message} /no_think"}
     )  # /no_think disables thinking
-    
+
     logger.info(f"Messages: {json.dumps(messages, indent=2)}")
 
     response = await client.chat_completion(  # type: ignore
@@ -212,36 +215,34 @@ with gr.Blocks() as demo:
         headers=["Title", "Overview", "Release Year", "Cast"],
         datatype=["str", "str", "number", "str"],
     )
-    with gr.Row():
-        with gr.Column(scale=1):
-            gr.ChatInterface(
-                fn=chat,
-                type="messages",
-                title="Movie Search",
-                theme=gr.themes.Default(),  # https://www.gradio.app/guides/theming-guide
-                additional_inputs=[
-                    gr.Textbox(
-                        label="Hugging Face API Key",
-                        placeholder="Enter your Hugging Face API key here",
-                        type="password",
-                        value=API_KEY,
-                    ),
-                    gr.Dropdown(
-                        label="Provider",
-                        choices=["nebius"],
-                        value="nebius",
-                    ),
-                    gr.Dropdown(
-                        label="Model",
-                        choices=["Qwen/Qwen3-30B-A3B"],
-                        value="Qwen/Qwen3-30B-A3B",
-                    ),
-                ],
-                additional_outputs=[df_component],
-            )
-    with gr.Row():
-        with gr.Column(scale=1):
-            df_component.render()
+    with gr.Row(), gr.Column(scale=1):
+        gr.ChatInterface(
+            fn=chat,
+            type="messages",
+            title="Movie Search",
+            theme=gr.themes.Default(),  # https://www.gradio.app/guides/theming-guide
+            additional_inputs=[
+                gr.Textbox(
+                    label="Hugging Face API Key",
+                    placeholder="Enter your Hugging Face API key here",
+                    type="password",
+                    value=API_KEY,
+                ),
+                gr.Dropdown(
+                    label="Provider",
+                    choices=["nebius"],
+                    value="nebius",
+                ),
+                gr.Dropdown(
+                    label="Model",
+                    choices=["Qwen/Qwen3-30B-A3B"],
+                    value="Qwen/Qwen3-30B-A3B",
+                ),
+            ],
+            additional_outputs=[df_component],
+        )
+    with gr.Row(), gr.Column(scale=1):
+        df_component.render()
 
 
 # if __name__ == "__main__":
